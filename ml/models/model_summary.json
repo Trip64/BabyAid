@@ -1,0 +1,45 @@
+{
+  "features": [
+    "body_temp",
+    "heart_rate",
+    "hrv_rmssd",
+    "hrv_sdnn",
+    "hrv_pnn50",
+    "temp_slope",
+    "temp_room_delta"
+  ],
+  "classes": [
+    "Normal",
+    "Hyperthermia/Fever",
+    "Bradycardia/SIDS-Risk",
+    "Tachycardia",
+    "Room-Overheat",
+    "Sensor-Detached"
+  ],
+  "class_profiles": {
+    "Normal": {
+      "count": 1478,
+      "temp_mean": 36.81,
+      "hr_mean": 117.7,
+      "rmssd_mean": 6.87
+    },
+    "Hyperthermia/Fever": {
+      "count": 240,
+      "temp_mean": 39.16,
+      "hr_mean": 160.8,
+      "rmssd_mean": 3.15
+    },
+    "Tachycardia": {
+      "count": 98,
+      "temp_mean": 42.61,
+      "hr_mean": 191.9,
+      "rmssd_mean": 1.39
+    },
+    "Room-Overheat": {
+      "count": 169,
+      "temp_mean": 41.1,
+      "hr_mean": 164.0,
+      "rmssd_mean": 0.06
+    }
+  }
+}

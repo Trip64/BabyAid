@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Kidsentinel - Infant Vital Signs Monitor</title>
+<style>
+:root {
+  --bg-primary: #090d16;
+  --bg-card: rgba(22, 27, 34, 0.7);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-main: #f0f6fc;
+  --text-muted: #8b949e;
+  --accent-blue: #58a6ff;
+  --accent-green: #3fb950;
+  --accent-red: #ff7b72;
+  --accent-orange: #ffa657;
+  --accent-yellow: #f2cc60;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font-sans);
+  background: radial-gradient(circle at top, #141b2d 0%, var(--bg-primary) 100%);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding: 24px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dashboard-container {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(13, 17, 23, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.header {
+  text-align: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.header .badge {
+  font-size: 10px;
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--accent-blue);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(88, 166, 255, 0.3);
+}
+
+.connection-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.pulse-dot.online {
+  background: var(--accent-green);
+  box-shadow: 0 0 10px var(--accent-green);
+}
+
+.pulse-dot.offline {
+  background: var(--accent-red);
+  box-shadow: 0 0 10px var(--accent-red);
+}
+
+.vital-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.card .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card .value-wrap {
+  display: flex;
+  align-items: baseline;
+}
+
+.card .value {
+  font-size: 38px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.card .unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.card.temp .value { color: var(--accent-red); }
+.card.hr .value { color: var(--accent-orange); }
+.card.room-temp .value { color: var(--accent-yellow); }
+.card.humidity .value { color: var(--accent-green); }
+
+.card.hr .heart-beat {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+  opacity: 0.3;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.card.hr .heart-beat.beat {
+  opacity: 1;
+  transform: scale(1.3);
+  box-shadow: 0 0 12px var(--accent-orange);
+}
+
+.alert-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
+}
+
+.alert-banner.active {
+  border-color: #da3633;
+  background: rgba(218, 54, 51, 0.15);
+  color: #ff7b72;
+  box-shadow: 0 0 20px rgba(218, 54, 51, 0.2);
+}
+
+.control-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.control-panel h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.control-row:last-child {
+  margin-bottom: 0;
+}
+
+.control-row label {
+  font-size: 14px;
+  color: #c9d1d9;
+}
+
+.slider-group {
+  margin-bottom: 16px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.slider-header label { font-size: 14px; color: #c9d1d9; }
+.slider-header span { font-size: 14px; color: var(--accent-blue); font-weight: 600; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #21262d;
+  border-radius: 3px;
+  outline: none;
+  margin: 8px 0;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+}
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #21262d;
+  border-radius: 13px;
+  transition: 0.2s;
+  border: 1px solid var(--border-color);
+}
+
+.switch span:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #8b949e;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + span {
+  background: #1f6feb;
+  border-color: #388bfd;
+}
+
+.switch input:checked + span:before {
+  transform: translateX(20px);
+  background: #ffffff;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #388bfd;
+  border-radius: 10px;
+  background: #1f6feb;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+}
+
+.action-btn:hover {
+  background: #388bfd;
+  box-shadow: 0 0 14px rgba(56, 139, 253, 0.4);
+}
+
+.demo-toggle {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.demo-toggle button {
+  background: transparent;
+  border: none;
+  color: var(--accent-blue);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="dashboard-container">
+  <div class="header">
+    <h1>Kidsentinel <span class="badge">Live Web Dashboard</span></h1>
+    <div class="connection-status">
+      <span class="pulse-dot online" id="statusDot"></span>
+      <span id="connStatus">Simulated Mode (Demo)</span>
+    </div>
+  </div>
+
+  <div class="vital-grid">
+    <div class="card temp">
+      <div class="label">Infant Body Temp</div>
+      <div class="value-wrap">
+        <span class="value" id="valTemp">36.7</span>
+        <span class="unit">°C</span>
+      </div>
+    </div>
+
+    <div class="card hr">
+      <div class="label">Heart Rate <span class="heart-beat" id="heartIcon"></span></div>
+      <div class="value-wrap">
+        <span class="value" id="valHR">118</span>
+        <span class="unit">BPM</span>
+      </div>
+    </div>
+
+    <div class="card room-temp">
+      <div class="label">Ambient Nursery</div>
+      <div class="value-wrap">
+        <span class="value" id="valRoomTemp">22.4</span>
+        <span class="unit">°C</span>
+      </div>
+    </div>
+
+    <div class="card humidity">
+      <div class="label">Room Humidity</div>
+      <div class="value-wrap">
+        <span class="value" id="valRoomHum">51</span>
+        <span class="unit">%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-banner" id="alertBanner">
+    All parameters normal
+  </div>
+
+  <div class="control-panel">
+    <h2>Device Calibration & Control</h2>
+    
+    <div class="slider-group">
+      <div class="slider-header">
+        <label for="tempTrimInput">Temperature Calibration Offset</label>
+        <span id="trimDisplay">+4.0°C</span>
+      </div>
+      <input type="range" id="tempTrimInput" min="-10" max="10" step="0.1" value="4.0">
+    </div>
+
+    <div class="control-row">
+      <label for="muteToggle">Mute Audio Alarm</label>
+      <label class="switch">
+        <input type="checkbox" id="muteToggle" checked>
+        <span></span>
+      </label>
+    </div>
+
+    <button class="action-btn" id="saveBtn" onclick="saveSettings()">Save Configuration</button>
+  </div>
+
+  <div class="demo-toggle">
+    Running standalone preview. <button onclick="toggleSimulationScenario()">Simulate Event</button>
+  </div>
+</div>
+
+<script>
+let isDemoMode = true;
+let beatState = false;
+let currentScenario = 0; // 0: Normal, 1: High Temp, 2: Bradycardia
+
+const valTemp = document.getElementById('valTemp');
+const valHR = document.getElementById('valHR');
+const valRoomTemp = document.getElementById('valRoomTemp');
+const valRoomHum = document.getElementById('valRoomHum');
+const statusDot = document.getElementById('statusDot');
+const connStatus = document.getElementById('connStatus');
+const alertBanner = document.getElementById('alertBanner');
+const heartIcon = document.getElementById('heartIcon');
+const trimInput = document.getElementById('tempTrimInput');
+const trimDisplay = document.getElementById('trimDisplay');
+const muteToggle = document.getElementById('muteToggle');
+
+trimInput.addEventListener('input', function() {
+  const val = parseFloat(this.value);
+  trimDisplay.textContent = (val >= 0 ? '+' : '') + val.toFixed(1) + '°C';
+});
+
+function updatePulseAnimation() {
+  beatState = !beatState;
+  heartIcon.classList.toggle('beat', beatState);
+}
+
+function runDemoCycle() {
+  updatePulseAnimation();
+  
+  if (currentScenario === 0) {
+    valTemp.textContent = (36.6 + (Math.random() * 0.3)).toFixed(1);
+    valHR.textContent = Math.floor(110 + Math.random() * 12);
+    valRoomTemp.textContent = (22.2 + (Math.random() * 0.4)).toFixed(1);
+    valRoomHum.textContent = Math.floor(48 + Math.random() * 5);
+    alertBanner.className = 'alert-banner';
+    alertBanner.textContent = 'All parameters normal';
+  } else if (currentScenario === 1) {
+    valTemp.textContent = (38.4 + (Math.random() * 0.3)).toFixed(1);
+    valHR.textContent = Math.floor(145 + Math.random() * 10);
+    alertBanner.className = 'alert-banner active';
+    alertBanner.textContent = '! WARNING: HIGH INFANT FEVER DETECTED !';
+  } else if (currentScenario === 2) {
+    valTemp.textContent = '36.5';
+    valHR.textContent = Math.floor(44 + Math.random() * 4);
+    alertBanner.className = 'alert-banner active';
+    alertBanner.textContent = '! CRITICAL: LOW HEART RATE (BRADYCARDIA) !';
+  }
+}
+
+function toggleSimulationScenario() {
+  currentScenario = (currentScenario + 1) % 3;
+  const names = ['Normal Baseline', 'High Fever (38.5°C)', 'Bradycardia / SIDS Risk (45 BPM)'];
+  alert('Switched simulation to: ' + names[currentScenario]);
+  runDemoCycle();
+}
+
+function pollBackend() {
+  if (isDemoMode) {
+    runDemoCycle();
+    return;
+  }
+
+  fetch('/api/state')
+    .then(r => r.json())
+    .then(d => {
+      valTemp.textContent = d.bt > 0 ? d.bt.toFixed(1) : '--';
+      valHR.textContent = d.hr > 0 ? d.hr : '---';
+      valRoomTemp.textContent = d.rt > 0 ? d.rt.toFixed(1) : '--';
+      valRoomHum.textContent = d.rh > 0 ? Math.round(d.rh) : '--';
+      statusDot.className = 'pulse-dot online';
+      connStatus.textContent = 'Telemetry Connected';
+      
+      if (d.alert) {
+        alertBanner.className = 'alert-banner active';
+        alertBanner.textContent = d.msg;
+      } else {
+        alertBanner.className = 'alert-banner';
+        alertBanner.textContent = 'All parameters normal';
+      }
+      updatePulseAnimation();
+    })
+    .catch(() => {
+      statusDot.className = 'pulse-dot offline';
+      connStatus.textContent = 'Hardware Node Offline (Showing Demo)';
+      isDemoMode = true;
+    });
+}
+
+function saveSettings() {
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saved!';
+  setTimeout(() => { btn.textContent = 'Save Configuration'; }, 1500);
+}
+
+setInterval(pollBackend, 1500);
+</script>
+</body>
+</html>
