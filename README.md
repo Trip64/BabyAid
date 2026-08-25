@@ -2,7 +2,7 @@
 
 # KIDSENTINEL
 
-### *Next-Generation Edge-AI Infant Vital Signs & Environmental Monitoring Platform*
+### *Infant Vital Signs & Environmental Monitor with Edge ML*
 
 [![Architecture: Distributed IoT](https://img.shields.io/badge/Architecture-Distributed%20Biomedical%20IoT-00A9CE.svg)](#system-architecture)
 [![Core: RISC-V & Xtensa](https://img.shields.io/badge/Architecture-RISC--V%20%7C%20Xtensa-3E84F6.svg)](#hardware-pinouts)
@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
 
 <p align="center">
-  <b>A distributed, low-latency biomedical IoT system combining optical PPG pulse oximetry, continuous body thermometry, ambient environmental telemetry, edge anomaly screening, and a standalone responsive web dashboard.</b>
+  <b>Wearable PPG pulse sensor + body thermometer + room environment monitor, with on-device anomaly detection and a standalone web dashboard. No cloud needed.</b>
 </p>
 
 [TL;DR](#tldr) •
@@ -28,11 +28,11 @@
 
 ## TL;DR
 
-- **Clinical-Grade Continuous Monitoring**: Solves the latency and false-reassurance problems of passive baby monitors by continuously capturing infant skin temperature (LM35) and optical photoplethysmography (MAX30100/MAX30102 PPG).
-- **On-Device Edge ML Anomaly Detection**: Runs an embedded TinyML Random Forest classifier directly on the sensor node to screen for bradycardia (SIDS risk index), tachycardia, fever onset velocity ($dT/dt$), and Heart Rate Variability (HRV) degradation before transmitting alerts.
-- **Deterministic FreeRTOS Core**: High-priority 1ms optical FIFO polling task isolates microsecond PPG peak detection from network latency and Wi-Fi stack operations.
-- **Dual-Zone Differential Thermometry**: Evaluates infant core-to-environment thermal coupling ($\Delta T = T_{\text{infant}} - T_{\text{ambient}}$) by linking wearable temperature with Sensirion SHT31 nursery room telemetry.
-- **Zero-Cloud Dependency**: Runs a standalone SoftAP web server on the display station, serving a real-time dark-mode HTML5 responsive dashboard to any local phone or laptop without external internet or subscriptions.
+- **Continuous infant monitoring**: Instead of a passive audio baby monitor, this continuously tracks skin temperature (LM35) and heart rate via optical PPG (MAX30100/MAX30102).
+- **ML anomaly detection on the MCU**: A TinyML Random Forest runs directly on the sensor node. It flags bradycardia, tachycardia, fever trends ($dT/dt$), and HRV drops before sending an alert.
+- **Reliable PPG sampling**: A dedicated FreeRTOS task polls the optical FIFO every 1ms so heartbeat peaks don't get lost when the Wi-Fi stack is busy.
+- **Infant vs. room temperature**: Compares the baby's skin temp against the room's SHT31 reading ($\Delta T = T_{\text{infant}} - T_{\text{ambient}}$) to catch environmental problems too.
+- **Works offline**: The display station runs its own Wi-Fi access point and web server. Connect any phone or laptop directly — no internet, no subscription, no cloud account.
 
 ---
 
@@ -77,18 +77,18 @@ flowchart TD
 
 ## Key Features
 
-- **Sub-millisecond PPG Sampling**: Dedicated FreeRTOS background task continuously drains the optical FIFO to prevent heartbeat loss during blocking network transactions.
-- **Adaptive Signal Filtering**: Outlier rejection ($>25\text{ BPM}$ jumps) paired with Exponential Moving Average (EMA) smoothing for stable cardiac pulse metrics.
-- **Edge TinyML Anomaly Screener**: On-device evaluation of infant thermoregulation, tachycardia, bradycardia (SIDS risk), and Heart Rate Variability (HRV) autonomic stability.
-- **Dual-Zone Environmental Monitoring**: Simultaneous acquisition of infant skin temperature and nursery ambient temperature/humidity via Sensirion SHT31.
-- **Standalone SoftAP & Responsive Dashboard**: Self-contained web server requiring no external router or cloud dependency.
-- **Non-blocking Audio-Visual Alarms**: Visual alert banners, beating heart animation, and frequency-modulated piezo buzzer with hardware mute button toggle.
+- **1ms PPG sampling**: Dedicated FreeRTOS task drains the optical FIFO continuously so heartbeats don't get lost during network traffic.
+- **Signal filtering**: Rejects outlier jumps (>25 BPM) and applies EMA smoothing for stable heart rate readings.
+- **On-device ML screening**: Checks temperature bounds, heart rate anomalies, and HRV stability right on the sensor node before sending anything over the network.
+- **Room + body temperature**: Reads both the infant's skin temp and the nursery ambient temp/humidity (SHT31) simultaneously.
+- **Self-contained network**: Display station creates its own Wi-Fi AP and serves the dashboard. No router needed.
+- **Non-blocking alarms**: Visual banners, heart animation, and piezo buzzer with a hardware mute button.
 
 ---
 
 ## Machine Learning & TinyML Pipeline
 
-Kidsentinel features an integrated Python-based ML training suite to model infant physiological dynamics and compile models into zero-dependency C++ headers for microcontroller execution.
+The ML side is a Python pipeline that takes raw telemetry, engineers clinical features, trains classifiers, and compiles them into a C++ header you can flash directly onto the MCU.
 
 ```mermaid
 flowchart LR
@@ -138,11 +138,11 @@ flowchart LR
 
 ## Project Roadmap & TODO
 
-- [ ] **Ultra-Low-Power BLE Mode**: Implement connectionless BLE advertising mode from sensor node to reduce average current draw to $< 2\text{mA}$.
-- [ ] **Dual-Wavelength Pulse Oximetry ($\text{SpO}_2$)**: Complete lookup-table calibration for non-invasive blood oxygen saturation percentage calculation.
-- [ ] **Nordic nRF54L15 Wearable Target**: Port sensor acquisition firmware and TinyML inference to Seeed XIAO nRF54L15 (Arm Cortex-M33) for extended coin-cell battery life.
-- [ ] **Capacitive Lead-Off Detection**: Add automatic sensor detachment detection to distinguish infant movement from sensor displacement.
-- [ ] **Longitudinal Cloud Sync**: Optional local MQTT / Home Assistant telemetry bridging for long-term clinical logging.
+- [ ] **Low-power BLE mode**: Switch from Wi-Fi to connectionless BLE advertising to get current draw under $< 2\text{mA}$.
+- [ ] **SpO2 calibration**: Finish the dual-wavelength lookup table for blood oxygen percentage.
+- [ ] **Port to nRF54L15**: Move the sensor firmware and ML inference to Cortex-M33 for better battery life.
+- [ ] **Sensor detachment detection**: Add capacitive lead-off sensing so it knows when the sensor falls off vs. when the baby moves.
+- [ ] **Optional cloud sync**: Add MQTT / Home Assistant bridging for long-term logging if someone wants it.
 
 ---
 
