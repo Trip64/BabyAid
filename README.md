@@ -1,8 +1,8 @@
 <div align="center">
 
-# KIDSENTINEL
+# BabyAid
 
-### *Infant Vital Signs & Environmental Monitor with Edge ML*
+### *Infant Vital Signs & Environmental Monitor with ML*
 
 [![Architecture: Distributed IoT](https://img.shields.io/badge/Architecture-Distributed%20Biomedical%20IoT-00A9CE.svg)](#system-architecture)
 [![Core: RISC-V & Xtensa](https://img.shields.io/badge/Architecture-RISC--V%20%7C%20Xtensa-3E84F6.svg)](#hardware-pinouts)
